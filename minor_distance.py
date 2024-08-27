@@ -1,6 +1,11 @@
 import math
+import os
+import time
+import openpyxl
 
-ROUTE_FILE = 'instances/VRPTW1.txt'
+# Directorio de las instancias y nombre del archivo Excel
+INSTANCES_DIR = 'instances'
+OUTPUT_FILE = 'VRPTW_JuanManuelGomez_constructivo.xlsx'
 
 
 def parse_file(filename):
@@ -39,8 +44,8 @@ def calculate_distances(graph, current_node_id):
     return distances
 
 
-def main():
-    graph, vehicle_capacity = parse_file(ROUTE_FILE)
+def solve_instance(instance_filename):
+    graph, vehicle_capacity = parse_file(instance_filename)
     vehicles = 1
     route = [0]
     visited_nodes = set()
@@ -48,6 +53,9 @@ def main():
     total_time = 0
     total_distance = 0
     current_node_id = 0
+    start_time = time.time()
+
+    routes = []
 
     while len(visited_nodes) < len(graph):
         distances = calculate_distances(graph, current_node_id)
@@ -101,8 +109,9 @@ def main():
             # No valid node was found after checking all nodes, return to depot
             depot_distance = euclidean_distance(graph[current_node_id], graph[0])
             total_distance += depot_distance
+            total_time += depot_distance  # Considerar el tiempo de vuelta al depósito
             route.append(0)
-            print(f'Vehicle {vehicles} route: {route}')
+            routes.append((route[:], total_time, current_capacity))  # Guardar la ruta
             vehicles += 1
             route = [0]
             current_capacity = vehicle_capacity
@@ -113,11 +122,42 @@ def main():
     if route[-1] != 0:  # Solo agregar 0 si no es el último nodo
         depot_distance = euclidean_distance(graph[current_node_id], graph[0])
         total_distance += depot_distance
+        total_time += depot_distance
         route.append(0)
+        routes.append((route[:], total_time, current_capacity))
 
-    print(f'Vehicle {vehicles} route: {route}')
-    print('Total time:', total_time)
-    print('Total distance:', total_distance)
+    end_time = time.time()
+    computation_time = int((end_time - start_time) * 1000)  # Convertir a milisegundos
+
+    return vehicles, total_distance, computation_time, routes, vehicle_capacity
+
+
+def save_results_to_excel(instance_name, vehicles, total_distance, computation_time, routes, vehicle_capacity):
+    if not os.path.exists(OUTPUT_FILE):
+        workbook = openpyxl.Workbook()
+        workbook.remove(workbook.active)  # Eliminar la hoja inicial vacía
+    else:
+        workbook = openpyxl.load_workbook(OUTPUT_FILE)
+
+    sheet = workbook.create_sheet(instance_name)
+
+    # Primera fila: número de vehículos, distancia total, tiempo de cómputo
+    sheet.append([vehicles, round(total_distance, 3), computation_time])
+
+    # Siguientes filas: resultados por vehículo
+    for route, time, capacity in routes:
+        sheet.append([len(route) - 2] + route + [round(time, 3), vehicle_capacity - capacity])
+
+    workbook.save(OUTPUT_FILE)
+
+
+def main():
+    for instance_filename in os.listdir(INSTANCES_DIR):
+        if instance_filename.endswith('.txt'):
+            instance_path = os.path.join(INSTANCES_DIR, instance_filename)
+            instance_name = instance_filename.replace('.txt', '')
+            vehicles, total_distance, computation_time, routes, vehicle_capacity = solve_instance(instance_path)
+            save_results_to_excel(instance_name, vehicles, total_distance, computation_time, routes, vehicle_capacity)
 
 
 if __name__ == '__main__':
