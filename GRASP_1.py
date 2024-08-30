@@ -1,8 +1,8 @@
-import math, os, time, openpyxl
+import math, os, time, openpyxl, random
 
 # Directorio de las instancias y nombre del archivo Excel
-INSTANCES_DIR = 'instances'
-OUTPUT_FILE = 'VRPTW_JuanManuelGomez_constructivo.xlsx'
+INSTANCES_DIR = 'test'
+OUTPUT_FILE = 'VRPTW_JuanManuelGomez_GRASP1.xlsx'
 
 
 def parse_file(filename):
@@ -28,21 +28,22 @@ def euclidean_distance(node1, node2):
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
-def calculate_distances(graph, current_node_id):
+def calculate_distances(graph, current_node_id, remaining_nodes):
     distances = []
     current_node = graph[current_node_id]
 
-    for node_id in graph:
+    for node_id in remaining_nodes:
         if node_id != current_node_id:
             distance = euclidean_distance(current_node, graph[node_id])
             distances.append((node_id, distance))
 
     distances.sort(key=lambda x: x[1])
-    return distances
+    return distances[:3]  # Retornar solo las 3 distancias más cortas
 
 
 def solve_instance(instance_filename):
     graph, vehicle_capacity = parse_file(instance_filename)
+    remaining_nodes = set(graph.keys())  # Conjunto de nodos que faltan por visitar
     vehicles = 1
     route = [0]
     visited_nodes = set()
@@ -54,8 +55,10 @@ def solve_instance(instance_filename):
 
     routes = []
 
-    while len(visited_nodes) < len(graph):
-        distances = calculate_distances(graph, current_node_id)
+    while len(visited_nodes) < len(graph) - 1:
+        remaining_nodes.discard(current_node_id)  # Eliminar el nodo actual de los nodos restantes
+        distances = calculate_distances(graph, current_node_id, remaining_nodes)
+        random.shuffle(distances)  # Mezclar las tres distancias cortas para una selección aleatoria
         found_valid_node = False
 
         for node_id, distance in distances:
@@ -72,51 +75,47 @@ def solve_instance(instance_filename):
             if arrival_time < graph[node_id][3]:
                 total_time += (graph[node_id][3] - arrival_time)
 
-            # Verificar si puede volver al depósito antes de que se cierre la ventana de tiempo
             return_to_depot_time = total_time + distance + graph[node_id][5] + euclidean_distance(graph[node_id], graph[0])
             if return_to_depot_time > graph[0][4]:
                 continue
 
-            # Si el nodo es válido, lo visitamos
             route.append(node_id)
             visited_nodes.add(node_id)
+            remaining_nodes.discard(node_id)  # Eliminar el nodo visitado de los nodos restantes
             current_capacity -= graph[node_id][2]
             total_time += distance + graph[node_id][5]
             total_distance += distance
             current_node_id = node_id
             found_valid_node = True
 
-            # Intentar regresar al depósito
             depot_distance = euclidean_distance(graph[current_node_id], graph[0])
             arrival_time_at_depot = total_time + depot_distance
             if arrival_time_at_depot > graph[0][4]:
-                # Si no puede regresar al depósito, deshacer el último nodo visitado
                 visited_nodes.remove(node_id)
+                remaining_nodes.add(node_id)  # Agregar nuevamente el nodo si se deshace la visita
                 route.pop()
                 current_capacity += graph[node_id][2]
                 total_time -= (distance + graph[node_id][5])
                 total_distance -= distance
-                current_node_id = route[-1]  # Volver al nodo anterior en la ruta
+                current_node_id = route[-1]
                 found_valid_node = False
                 continue
 
             break
 
         if not found_valid_node:
-            # No valid node was found after checking all nodes, return to depot
             depot_distance = euclidean_distance(graph[current_node_id], graph[0])
             total_distance += depot_distance
-            total_time += depot_distance  # Considerar el tiempo de vuelta al depósito
+            total_time += depot_distance
             route.append(0)
-            routes.append((route[:], total_time, current_capacity))  # Guardar la ruta
+            routes.append((route[:], total_time, current_capacity))
             vehicles += 1
             route = [0]
             current_capacity = vehicle_capacity
             total_time = 0
             current_node_id = 0
 
-    # Final route return to depot
-    if route[-1] != 0:  # Solo agregar 0 si no es el último nodo
+    if route[-1] != 0:
         depot_distance = euclidean_distance(graph[current_node_id], graph[0])
         total_distance += depot_distance
         total_time += depot_distance
@@ -124,7 +123,7 @@ def solve_instance(instance_filename):
         routes.append((route[:], total_time, current_capacity))
 
     end_time = time.time()
-    computation_time = int((end_time - start_time) * 1000)  # Convertir a milisegundos
+    computation_time = int((end_time - start_time) * 1000)
 
     return vehicles, total_distance, computation_time, routes, vehicle_capacity
 
