@@ -2,7 +2,7 @@ import math, os, time, openpyxl, random
 
 # Directorio de las instancias y nombre del archivo Excel
 INSTANCES_DIR = 'test'
-OUTPUT_FILE = 'VRPTW_JuanManuelGomez_GRASP1.xlsx'
+OUTPUT_FILE = 'VRPTW_JuanManuelGomez_GRASP2.xlsx'
 
 
 def parse_file(filename):
@@ -28,7 +28,7 @@ def euclidean_distance(node1, node2):
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
-def calculate_distances(graph, current_node_id, remaining_nodes, k):
+def calculate_distances(graph, current_node_id, remaining_nodes, alpha):
     distances = []
     current_node = graph[current_node_id]
 
@@ -38,7 +38,12 @@ def calculate_distances(graph, current_node_id, remaining_nodes, k):
             distances.append((node_id, distance))
 
     distances.sort(key=lambda x: x[1])
-    return distances[:k]  # Retornar solo las 3 distancias más cortas
+    resulting_nodes = int(len(distances) * alpha)
+
+    if resulting_nodes == 0:
+        resulting_nodes = 1
+        
+    return distances[:resulting_nodes]  # Retornar solo las 3 distancias más cortas
 
 
 def solve_instance(instance_filename):
@@ -46,7 +51,7 @@ def solve_instance(instance_filename):
     remaining_nodes = set(graph.keys())  # Conjunto de nodos que faltan por visitar
     vehicles = 1
     route = [0]
-    k = 3
+    alpha = 0.5
     visited_nodes = set()
     current_capacity = vehicle_capacity
     total_time = 0
@@ -58,7 +63,7 @@ def solve_instance(instance_filename):
 
     while len(visited_nodes) < len(graph) - 1:
         remaining_nodes.discard(current_node_id)  # Eliminar el nodo actual de los nodos restantes
-        distances = calculate_distances(graph, current_node_id, remaining_nodes, k)
+        distances = calculate_distances(graph, current_node_id, remaining_nodes, alpha)
         random.shuffle(distances)  # Mezclar las tres distancias cortas para una selección aleatoria
         found_valid_node = False
 
