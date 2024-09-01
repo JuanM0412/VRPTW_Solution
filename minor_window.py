@@ -7,14 +7,9 @@ def parse_file(filename):
     with open(filename, 'r') as file:
         content = file.readlines()
 
-    # Usamos cualquier cantidad de espacios como separador
     first_line = content[0].split()
     n_nodes = int(first_line[0])
     vehicle_capacity = int(first_line[1])
-
-    #print(f'Archivo: {filename}')
-    #print('nodes:', n_nodes)
-    #print('vehicle_capacity:', vehicle_capacity)
 
     graph = {}
     for line in content[1:]:
@@ -52,7 +47,6 @@ def main():
     sorted_nodes = sorted(graph.keys(), key=lambda x: graph[x][3])
     del sorted_nodes[0]
 
-    #print(sorted_nodes)
     distances = calculate_distances(graph, 0)
 
     print(f'Distancias desde el nodo {0}:')

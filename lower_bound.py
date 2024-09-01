@@ -2,7 +2,7 @@ import math, os, time, openpyxl
 
 
 INSTANCES_DIR = 'instances'
-OUTPUT_FILE = 'VRPTW_JuanManuelGomez_constructivo.xlsx'
+OUTPUT_FILE = 'VRPTW_JuanManuelGomez_LowerBound.xlsx'
 
 
 def parse_file(filename):
@@ -54,28 +54,18 @@ def solve_instance(instance_filename):
 
     routes = []
 
-    while len(visited_nodes) < len(graph):
+    while len(visited_nodes) < len(graph) - 1:
         distances = calculate_distances(graph, current_node_id)
         found_valid_node = False
 
         for node_id, distance in distances:
-            if node_id in visited_nodes:
+            if node_id in visited_nodes or node_id == 0:
                 continue
 
             if current_capacity - graph[node_id][2] < 0:
                 continue
 
-            arrival_time = total_time + distance
-            if arrival_time > graph[node_id][4]:
-                continue
-
-            if arrival_time < graph[node_id][3]:
-                total_time += (graph[node_id][3] - arrival_time)
-
-            return_to_depot_time = total_time + distance + graph[node_id][5] + euclidean_distance(graph[node_id], graph[0])
-            if return_to_depot_time > graph[0][4]:
-                continue
-
+            # Si el nodo es válido, lo visitamos
             route.append(node_id)
             visited_nodes.add(node_id)
             current_capacity -= graph[node_id][2]
@@ -84,33 +74,23 @@ def solve_instance(instance_filename):
             current_node_id = node_id
             found_valid_node = True
 
-            depot_distance = euclidean_distance(graph[current_node_id], graph[0])
-            arrival_time_at_depot = total_time + depot_distance
-            if arrival_time_at_depot > graph[0][4]:
-                visited_nodes.remove(node_id)
-                route.pop()
-                current_capacity += graph[node_id][2]
-                total_time -= (distance + graph[node_id][5])
-                total_distance -= distance
-                current_node_id = route[-1]
-                found_valid_node = False
-                continue
-
             break
 
         if not found_valid_node:
+            # No valid node was found after checking all nodes, return to depot
             depot_distance = euclidean_distance(graph[current_node_id], graph[0])
             total_distance += depot_distance
-            total_time += depot_distance
+            total_time += depot_distance  # Considerar el tiempo de vuelta al depósito
             route.append(0)
-            routes.append((route[:], total_time, current_capacity))
+            routes.append((route[:], total_time, current_capacity))  # Guardar la ruta
             vehicles += 1
             route = [0]
             current_capacity = vehicle_capacity
             total_time = 0
             current_node_id = 0
 
-    if route[-1] != 0:
+    # Final route return to depot
+    if route[-1] != 0:  # Solo agregar 0 si no es el último nodo
         depot_distance = euclidean_distance(graph[current_node_id], graph[0])
         total_distance += depot_distance
         total_time += depot_distance
@@ -118,7 +98,7 @@ def solve_instance(instance_filename):
         routes.append((route[:], total_time, current_capacity))
 
     end_time = time.time()
-    computation_time = int((end_time - start_time) * 1000)
+    computation_time = int((end_time - start_time) * 1000)  # Convertir a milisegundos
 
     return vehicles, total_distance, computation_time, routes, vehicle_capacity
 
@@ -126,14 +106,16 @@ def solve_instance(instance_filename):
 def save_results_to_excel(instance_name, vehicles, total_distance, computation_time, routes, vehicle_capacity):
     if not os.path.exists(OUTPUT_FILE):
         workbook = openpyxl.Workbook()
-        workbook.remove(workbook.active)
+        workbook.remove(workbook.active)  # Eliminar la hoja inicial vacía
     else:
         workbook = openpyxl.load_workbook(OUTPUT_FILE)
 
     sheet = workbook.create_sheet(instance_name)
 
+    # Primera fila: número de vehículos, distancia total, tiempo de cómputo
     sheet.append([vehicles, round(total_distance, 3), computation_time])
 
+    # Siguientes filas: resultados por vehículo
     for route, time, capacity in routes:
         sheet.append([len(route) - 2] + route + [round(time, 3), vehicle_capacity - capacity])
 

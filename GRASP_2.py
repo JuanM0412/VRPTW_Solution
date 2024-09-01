@@ -1,7 +1,7 @@
 import math, os, time, openpyxl, random
 
-# Directorio de las instancias y nombre del archivo Excel
-INSTANCES_DIR = 'test'
+
+INSTANCES_DIR = 'instances'
 OUTPUT_FILE = 'VRPTW_JuanManuelGomez_GRASP2.xlsx'
 
 
@@ -43,12 +43,12 @@ def calculate_distances(graph, current_node_id, remaining_nodes, alpha):
     if resulting_nodes == 0:
         resulting_nodes = 1
         
-    return distances[:resulting_nodes]  # Retornar solo las 3 distancias más cortas
+    return distances[:resulting_nodes]
 
 
 def solve_instance(instance_filename):
     graph, vehicle_capacity = parse_file(instance_filename)
-    remaining_nodes = set(graph.keys())  # Conjunto de nodos que faltan por visitar
+    remaining_nodes = set(graph.keys())
     vehicles = 1
     route = [0]
     alpha = 0.5
@@ -62,9 +62,9 @@ def solve_instance(instance_filename):
     routes = []
 
     while len(visited_nodes) < len(graph) - 1:
-        remaining_nodes.discard(current_node_id)  # Eliminar el nodo actual de los nodos restantes
+        remaining_nodes.discard(current_node_id)
         distances = calculate_distances(graph, current_node_id, remaining_nodes, alpha)
-        random.shuffle(distances)  # Mezclar las tres distancias cortas para una selección aleatoria
+        random.shuffle(distances)
         found_valid_node = False
 
         for node_id, distance in distances:
@@ -87,7 +87,7 @@ def solve_instance(instance_filename):
 
             route.append(node_id)
             visited_nodes.add(node_id)
-            remaining_nodes.discard(node_id)  # Eliminar el nodo visitado de los nodos restantes
+            remaining_nodes.discard(node_id)
             current_capacity -= graph[node_id][2]
             total_time += distance + graph[node_id][5]
             total_distance += distance
@@ -98,7 +98,7 @@ def solve_instance(instance_filename):
             arrival_time_at_depot = total_time + depot_distance
             if arrival_time_at_depot > graph[0][4]:
                 visited_nodes.remove(node_id)
-                remaining_nodes.add(node_id)  # Agregar nuevamente el nodo si se deshace la visita
+                remaining_nodes.add(node_id)
                 route.pop()
                 current_capacity += graph[node_id][2]
                 total_time -= (distance + graph[node_id][5])
@@ -137,16 +137,14 @@ def solve_instance(instance_filename):
 def save_results_to_excel(instance_name, vehicles, total_distance, computation_time, routes, vehicle_capacity):
     if not os.path.exists(OUTPUT_FILE):
         workbook = openpyxl.Workbook()
-        workbook.remove(workbook.active)  # Eliminar la hoja inicial vacía
+        workbook.remove(workbook.active)
     else:
         workbook = openpyxl.load_workbook(OUTPUT_FILE)
 
     sheet = workbook.create_sheet(instance_name)
 
-    # Primera fila: número de vehículos, distancia total, tiempo de cómputo
     sheet.append([vehicles, round(total_distance, 3), computation_time])
 
-    # Siguientes filas: resultados por vehículo
     for route, time, capacity in routes:
         sheet.append([len(route) - 2] + route + [round(time, 3), vehicle_capacity - capacity])
 
