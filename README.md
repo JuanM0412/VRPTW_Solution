@@ -8,7 +8,7 @@ Cada vehículo tiene una capacidad limitada, que restringe la carga total que pu
 
 ## Definición del problema
 
-El VRPTW se define en un grafo \( G = (V, E) \), donde \( V = \{0, 1, ..., n\} \) es el conjunto de nodos y \( E \) es el conjunto de arcos que conectan los nodos. El nodo 0 representa el depósito, mientras que \( V_c = \{1, ..., n\} \) son los clientes. Cada nodo *i* tiene una demanda \( q_i \) que debe ser menor o igual a la capacidad \( Q \) del vehículo, un tiempo de servicio \( s_i \), y una ventana de tiempo \([e_i, l_i]\) en la que se debe iniciar el servicio. Si un vehículo llega antes de \( e_j \), debe esperar hasta que la ventana de tiempo abra, y si llega después de \( l_j \), no se permite el servicio.
+El VRPTW se define en un grafo *G* = (V, E), donde *V* = {0, 1, ..., n} es el conjunto de nodos y *E* es el conjunto de arcos que conectan los nodos. El nodo 0 representa el depósito, mientras que *V_c* = {1, ..., n} son los clientes. Cada nodo *i* tiene una demanda *q_i* que debe ser menor o igual a la capacidad *Q* del vehículo, un tiempo de servicio *s_i*, y una ventana de tiempo [*e_i*, *l_i*] en la que se debe iniciar el servicio. Si un vehículo llega antes de *e_j*, debe esperar hasta que la ventana de tiempo abra, y si llega después de *l_j*, no se permite el servicio.
 
 ### Restricciones
 
@@ -16,8 +16,8 @@ Cada solución del VRPTW debe cumplir las siguientes restricciones:
 
 1. Cada cliente debe ser atendido solo una vez.
 2. Los vehículos deben viajar de un cliente a otro en la ruta, comenzando y terminando en el depósito.
-3. La demanda total de cada ruta no debe exceder la capacidad del vehículo \( Q \).
-4. El servicio en cada cliente debe comenzar dentro de su ventana de tiempo, y los vehículos deben regresar al depósito antes de \( l_0 \).
+3. La demanda total de cada ruta no debe exceder la capacidad del vehículo *Q*.
+4. El servicio en cada cliente debe comenzar dentro de su ventana de tiempo, y los vehículos deben regresar al depósito antes de *l_0*.
 
 Este problema busca minimizar el número de vehículos y la distancia total recorrida, respetando las restricciones de capacidad y tiempo.
 
