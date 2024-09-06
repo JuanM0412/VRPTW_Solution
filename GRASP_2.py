@@ -2,7 +2,7 @@ import math, os, time, openpyxl, random
 
 
 INSTANCES_DIR = 'instances'
-OUTPUT_FILE = 'output/VRPTW_JuanManuelGomez_GRASP2_3.xlsx'
+OUTPUT_FILE = 'output/VRPTW_JuanManuelGomez_GRASP2.xlsx'
 
 
 def parse_file(filename):
@@ -51,7 +51,7 @@ def solve_instance(instance_filename):
     remaining_nodes = set(graph.keys())
     vehicles = 1
     route = [0]
-    alpha = 0.9
+    alpha = 0.5
     visited_nodes = set()
     current_capacity = vehicle_capacity
     total_time = 0
