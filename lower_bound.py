@@ -2,7 +2,7 @@ import math, os, time, openpyxl
 
 
 INSTANCES_DIR = 'instances'
-OUTPUT_FILE = 'VRPTW_JuanManuelGomez_LowerBound.xlsx'
+OUTPUT_FILE = 'output/VRPTW_JuanManuelGomez_LowerBound.xlsx'
 
 
 def parse_file(filename):

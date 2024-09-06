@@ -2,7 +2,7 @@ import math, os, time, openpyxl
 
 
 INSTANCES_DIR = 'instances'
-OUTPUT_FILE = 'VRPTW_JuanManuelGomez_constructivo.xlsx'
+OUTPUT_FILE = 'output/VRPTW_JuanManuelGomez_constructivo.xlsx'
 
 
 def parse_file(filename):
@@ -54,12 +54,12 @@ def solve_instance(instance_filename):
 
     routes = []
 
-    while len(visited_nodes) < len(graph):
+    while len(visited_nodes) < len(graph) - 1:
         distances = calculate_distances(graph, current_node_id)
         found_valid_node = False
 
         for node_id, distance in distances:
-            if node_id in visited_nodes:
+            if node_id in visited_nodes or node_id == 0:
                 continue
 
             if current_capacity - graph[node_id][2] < 0:
