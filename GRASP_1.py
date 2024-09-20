@@ -1,6 +1,5 @@
 import math, os, time, openpyxl, random
 
-
 INSTANCES_DIR = 'instances'
 OUTPUT_FILE = 'output/VRPTW_JuanManuelGomez_GRASP1.xlsx'
 
@@ -55,6 +54,7 @@ def solve_instance(instance_filename):
     start_time = time.time()
 
     routes = []
+    times_per_node = [0]
 
     while len(visited_nodes) < len(graph) - 1:
         remaining_nodes.discard(current_node_id)
@@ -88,6 +88,7 @@ def solve_instance(instance_filename):
             total_distance += distance
             current_node_id = node_id
             found_valid_node = True
+            times_per_node.append(arrival_time)  # Registro del tiempo de llegada a este nodo
 
             depot_distance = euclidean_distance(graph[current_node_id], graph[0])
             arrival_time_at_depot = total_time + depot_distance
@@ -109,9 +110,11 @@ def solve_instance(instance_filename):
             total_distance += depot_distance
             total_time += depot_distance
             route.append(0)
-            routes.append((route[:], total_time, current_capacity))
+            times_per_node.append(total_time)  # Registro del tiempo de llegada al depósito
+            routes.append((route[:], times_per_node[:], total_time, current_capacity))
             vehicles += 1
             route = [0]
+            times_per_node = [0]  # Reinicia el registro de tiempos, comenzando de nuevo desde el depósito
             current_capacity = vehicle_capacity
             total_time = 0
             current_node_id = 0
@@ -121,7 +124,8 @@ def solve_instance(instance_filename):
         total_distance += depot_distance
         total_time += depot_distance
         route.append(0)
-        routes.append((route[:], total_time, current_capacity))
+        times_per_node.append(total_time)  # Registro del tiempo de llegada al depósito
+        routes.append((route[:], times_per_node[:], total_time, current_capacity))
 
     end_time = time.time()
     computation_time = int((end_time - start_time) * 1000)
@@ -140,8 +144,9 @@ def save_results_to_excel(instance_name, vehicles, total_distance, computation_t
 
     sheet.append([vehicles, round(total_distance, 3), computation_time])
 
-    for route, time, capacity in routes:
-        sheet.append([len(route) - 2] + route + [round(time, 3), vehicle_capacity - capacity])
+    for route, times, total_time, capacity in routes:
+        # Guardar la ruta junto con los tiempos de llegada a cada nodo
+        sheet.append([len(route) - 2] + route + times + [round(total_time, 3), vehicle_capacity - capacity])
 
     workbook.save(OUTPUT_FILE)
 
