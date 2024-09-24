@@ -146,7 +146,7 @@ def save_results_to_excel(instance_name, vehicles, total_distance, computation_t
 
     for route, times, total_time, capacity in routes:
         # Guardar la ruta junto con los tiempos de llegada a cada nodo
-        sheet.append([len(route) - 2] + route + times + [round(total_time, 3), vehicle_capacity - capacity])
+        sheet.append([len(route) - 2] + route + times + [vehicle_capacity - capacity])
 
     workbook.save(OUTPUT_FILE)
 

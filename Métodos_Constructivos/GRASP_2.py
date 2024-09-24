@@ -2,7 +2,7 @@ import math, os, time, openpyxl, random
 
 
 INSTANCES_DIR = 'instances'
-OUTPUT_FILE = 'output/VRPTW_JuanManuelGomez_GRASP2.xlsx'
+OUTPUT_FILE = 'Métodos_Constructivos/output/VRPTW_JuanManuelGomez_GRASP2_3.xlsx'
 
 
 def parse_file(filename):
@@ -51,7 +51,7 @@ def solve_instance(instance_filename):
     remaining_nodes = set(graph.keys())
     vehicles = 1
     route = [0]
-    alpha = 0.5
+    alpha = 0.9
     visited_nodes = set()
     current_capacity = vehicle_capacity
     total_time = 0
@@ -151,7 +151,7 @@ def save_results_to_excel(instance_name, vehicles, total_distance, computation_t
     sheet.append([vehicles, round(total_distance, 3), computation_time])
 
     for route, times, total_time, capacity in routes:
-        sheet.append([len(route) - 2] + route + times + [round(total_time, 3), vehicle_capacity - capacity])
+        sheet.append([len(route) - 2] + route + times + [vehicle_capacity - capacity])
 
     workbook.save(OUTPUT_FILE)
 
