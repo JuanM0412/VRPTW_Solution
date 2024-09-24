@@ -1,7 +1,7 @@
 import math, os, time, openpyxl, random
 
 INSTANCES_DIR = 'instances'
-OUTPUT_FILE = 'output/VRPTW_JuanManuelGomez_GRASP1.xlsx'
+OUTPUT_FILE = 'Métodos_Constructivos/output/VRPTW_JuanManuelGomez_GRASP1.xlsx'
 
 
 def parse_file(filename):
