@@ -50,6 +50,7 @@ def solve_instance(instance_filename):
 
     routes = []
     arrival_times = [0]  # List to track arrival times at each node
+    route_distance = 0  # Distance for the current route
 
     while len(visited_nodes) < len(graph) - 1:
         distances = calculate_distances(graph, current_node_id)
@@ -79,6 +80,7 @@ def solve_instance(instance_filename):
             current_capacity -= graph[node_id][2]
             total_time += distance + graph[node_id][5]
             total_distance += distance
+            route_distance += distance  # Add to the current route's distance
             current_node_id = node_id
             arrival_times.append(arrival_time)  # Append the arrival time for this node
             found_valid_node = True
@@ -91,6 +93,7 @@ def solve_instance(instance_filename):
                 current_capacity += graph[node_id][2]
                 total_time -= (distance + graph[node_id][5])
                 total_distance -= distance
+                route_distance -= distance  # Subtract from current route's distance
                 current_node_id = route[-1]
                 arrival_times.pop()  # Remove the last arrival time
                 found_valid_node = False
@@ -101,24 +104,27 @@ def solve_instance(instance_filename):
         if not found_valid_node:
             depot_distance = euclidean_distance(graph[current_node_id], graph[0])
             total_distance += depot_distance
+            route_distance += depot_distance  # Add depot distance to current route's distance
             total_time += depot_distance
             route.append(0)
             arrival_times.append(total_time)  # Arrival time at the depot
-            routes.append((route[:], total_time, current_capacity, arrival_times[:]))
+            routes.append((route[:], total_time, current_capacity, arrival_times[:], route_distance))  # Store route distance
             vehicles += 1
             route = [0]
             arrival_times = [0]  # Reset arrival times for the new vehicle
             current_capacity = vehicle_capacity
             total_time = 0
+            route_distance = 0  # Reset route distance for new vehicle
             current_node_id = 0
 
     if route[-1] != 0:
         depot_distance = euclidean_distance(graph[current_node_id], graph[0])
         total_distance += depot_distance
+        route_distance += depot_distance  # Add depot distance to final route's distance
         total_time += depot_distance
         route.append(0)
         arrival_times.append(total_time)  # Final arrival time at depot
-        routes.append((route[:], total_time, current_capacity, arrival_times[:]))
+        routes.append((route[:], total_time, current_capacity, arrival_times[:], route_distance))
 
     end_time = time.time()
     computation_time = int((end_time - start_time) * 1000)

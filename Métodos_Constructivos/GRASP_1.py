@@ -54,7 +54,7 @@ def solve_instance(instance_filename):
     start_time = time.time()
 
     routes = []
-    times_per_node = [0]
+    arrival_times = [0]
 
     while len(visited_nodes) < len(graph) - 1:
         remaining_nodes.discard(current_node_id)
@@ -75,6 +75,7 @@ def solve_instance(instance_filename):
 
             if arrival_time < graph[node_id][3]:
                 total_time += (graph[node_id][3] - arrival_time)
+                arrival_time = graph[node_id][3]
 
             return_to_depot_time = total_time + distance + graph[node_id][5] + euclidean_distance(graph[node_id], graph[0])
             if return_to_depot_time > graph[0][4]:
@@ -88,7 +89,7 @@ def solve_instance(instance_filename):
             total_distance += distance
             current_node_id = node_id
             found_valid_node = True
-            times_per_node.append(arrival_time)  # Registro del tiempo de llegada a este nodo
+            arrival_times.append(arrival_time)  # Registro del tiempo de llegada a este nodo
 
             depot_distance = euclidean_distance(graph[current_node_id], graph[0])
             arrival_time_at_depot = total_time + depot_distance
@@ -110,11 +111,11 @@ def solve_instance(instance_filename):
             total_distance += depot_distance
             total_time += depot_distance
             route.append(0)
-            times_per_node.append(total_time)  # Registro del tiempo de llegada al depósito
-            routes.append((route[:], times_per_node[:], total_time, current_capacity))
+            arrival_times.append(total_time)  # Registro del tiempo de llegada al depósito
+            routes.append((route[:], total_time, current_capacity, arrival_times[:]))
             vehicles += 1
             route = [0]
-            times_per_node = [0]  # Reinicia el registro de tiempos, comenzando de nuevo desde el depósito
+            arrival_times = [0]  # Reinicia el registro de tiempos, comenzando de nuevo desde el depósito
             current_capacity = vehicle_capacity
             total_time = 0
             current_node_id = 0
@@ -124,8 +125,8 @@ def solve_instance(instance_filename):
         total_distance += depot_distance
         total_time += depot_distance
         route.append(0)
-        times_per_node.append(total_time)  # Registro del tiempo de llegada al depósito
-        routes.append((route[:], times_per_node[:], total_time, current_capacity))
+        arrival_times.append(total_time)  # Registro del tiempo de llegada al depósito
+        routes.append((route[:], total_time, current_capacity, arrival_times[:]))
 
     end_time = time.time()
     computation_time = int((end_time - start_time) * 1000)
@@ -144,9 +145,14 @@ def save_results_to_excel(instance_name, vehicles, total_distance, computation_t
 
     sheet.append([vehicles, round(total_distance, 3), computation_time])
 
-    for route, times, total_time, capacity in routes:
-        # Guardar la ruta junto con los tiempos de llegada a cada nodo
-        sheet.append([len(route) - 2] + route + times + [vehicle_capacity - capacity])
+    for route, time, capacity, arrival_times in routes:
+        # Prepare the row with number of nodes, the route, and the arrival times
+        route_without_depots = route[1:-1]  # Exclude the depots (first and last)
+        arrival_times_without_depots = arrival_times[1:-1]  # Exclude depot times for arrival
+
+        # Construct the row data
+        row = [len(route_without_depots)] + route + [round(t, 3) for t in arrival_times] + [vehicle_capacity - capacity]
+        sheet.append(row)
 
     workbook.save(OUTPUT_FILE)
 
