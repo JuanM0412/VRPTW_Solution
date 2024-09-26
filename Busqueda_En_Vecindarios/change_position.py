@@ -1,13 +1,14 @@
 from solution import solve_instance, euclidean_distance
-import math, os, time
+import os
 from copy import deepcopy
+from output import save_results_to_excel
 
 
+OUTPUT_FILE = 'Busqueda_En_Vecindarios/output/VRPTW_JuanManuelGomez_Vecindario1.xlsx'
 INSTANCES_DIR = 'instances'
-OUTPUT_FILE = 'output/VRPTW_JuanManuelGomez_constructivo.xlsx'
 
 
-def check_solution(graph, total_distance, computation_time, new_route, max_vehicle_capacity, i_iter, j_iter, travel_times):
+def check_solution(graph, total_distance, new_route, max_vehicle_capacity, original_route):
     #print('New route:', new_route)
     new_total_distance = 0
     new_total_time = 0  # Variable para mantener el tiempo total actualizado
@@ -62,29 +63,46 @@ def check_solution(graph, total_distance, computation_time, new_route, max_vehic
 
 
 def change_position(graph, vehicles, total_distance, computation_time, routes, max_vehicle_capacity):
-    for route in routes:
-        nodes_traveled_copy = deepcopy(route[0])
-        current_route_distance = route[4]
-        travel_times = route[3]
+    for idx, route in enumerate(routes):
+        # Convertir la tupla en una lista para modificarla temporalmente
+        route_list = list(route)
+        nodes_traveled_copy = deepcopy(route_list[0])
+        current_route_distance = route_list[4]
+        travel_times = route_list[3]
+        flag = True
+
         i = 1
         while i < len(nodes_traveled_copy) - 1:
             j = i + 1
             while j < len(nodes_traveled_copy) - 1:
-                factibility, new_total_distance = check_solution(deepcopy(graph), deepcopy(total_distance), computation_time, nodes_traveled_copy, deepcopy(max_vehicle_capacity), i, j, travel_times)
-                #print('Old distance', current_route_distance)
+                # Intercambiar las posiciones de los nodos
+                nodes_traveled_copy[i], nodes_traveled_copy[j] = nodes_traveled_copy[j], nodes_traveled_copy[i]
+                
+                # Verificar factibilidad y distancia
+                factibility, new_total_distance = check_solution(deepcopy(graph), deepcopy(total_distance), nodes_traveled_copy, deepcopy(max_vehicle_capacity), route)
+                
                 if factibility and new_total_distance < current_route_distance:
+                    flag = False
                     print('Old distance', current_route_distance)
                     current_route_distance = new_total_distance
+                    route_list[4] = current_route_distance  # Modificar la distancia
+                    route_list[0] = nodes_traveled_copy  # Actualizar la ruta
                     print('NEW DISTANCE', current_route_distance)
-                    #print('Change position')
-                    i = 1
+                    i = 1  # Reiniciar el ciclo para buscar más mejoras
                     break
-                    
-                nodes_traveled_copy[i], nodes_traveled_copy[j] = nodes_traveled_copy[j], nodes_traveled_copy[i]
-                #print('Original route:', nodes_traveled)
-                #print(f'New route: {nodes_traveled_copy}')
+
                 j += 1
+
+                if flag:
+                    nodes_traveled_copy = deepcopy(route_list[0])
             i += 1
+
+        # Convertir la lista nuevamente a una tupla después de las modificaciones
+        routes[idx] = tuple(route_list)
+
+        total_distance = sum(route[4] for route in routes)
+
+    return len(routes), total_distance, computation_time, routes, max_vehicle_capacity
 
 
 def main():
@@ -92,9 +110,11 @@ def main():
         if instance_filename.endswith('.txt'):
             instance_path = os.path.join(INSTANCES_DIR, instance_filename)
             print(f'Solving instance {instance_path}')
+            instance_name = instance_filename.replace('.txt', '')
             graph, vehicles, total_distance, computation_time, routes, vehicle_capacity = solve_instance(instance_path)
-            #print('ROUTES:', routes)
-            change_position(graph, vehicles, total_distance, computation_time, routes, vehicle_capacity)
+            print('ROUTES:', routes)
+            vehicles, total_distance, computation_time, routes, vehicle_capacity = change_position(graph, vehicles, total_distance, computation_time, routes, vehicle_capacity)
+            save_results_to_excel(instance_name, vehicles, total_distance, computation_time, routes, vehicle_capacity, OUTPUT_FILE)
 
 
 if __name__ == '__main__':
