@@ -27,27 +27,22 @@ def check_solution(graph, total_distance, new_route, max_vehicle_capacity, origi
 
         # Calcular la distancia desde el nodo anterior
         previous_node = new_route[i - 1]
-        distance_to_current_node = euclidean_distance(graph[previous_node], graph[node_id])
-
-        # Actualizar el tiempo de llegada
-        total_time += distance_to_current_node
+        distance = euclidean_distance(graph[previous_node], graph[node_id])
+        arrival_time = total_time + distance
 
         # Verificar si el tiempo de llegada cae dentro de la ventana de tiempo del nodo
-        earliest_time, latest_time = graph[node_id][3], graph[node_id][4]
-        if total_time > latest_time:
-            #print(f'Arrived too late to node {node_id}')
+        # Verificar si el tiempo de llegada cae dentro de la ventana de tiempo del nodo
+        if arrival_time > graph[node_id][4]:
             return False, total_distance, original_times
 
-        # Si el vehículo llega antes del tiempo de inicio de servicio, debe esperar
-        if total_time < earliest_time:
-            total_time = earliest_time
-
-        arrival_time = total_time + distance_to_current_node
+        # Si llega antes del tiempo de inicio de servicio, debe esperar
+        if arrival_time < graph[node_id][3]:
+            total_time += (graph[node_id][3] - arrival_time)
+            arrival_time = graph[node_id][3]
 
         # Actualizar el tiempo total y la distancia
-        service_time = graph[node_id][5]
-        total_time += service_time
-        new_total_distance += distance_to_current_node
+        total_time += graph[node_id][5] + distance
+        new_total_distance += distance
         current_vehicle_capacity -= node_demand
         arrival_times.append(arrival_time)
         i += 1
@@ -68,7 +63,10 @@ def check_solution(graph, total_distance, new_route, max_vehicle_capacity, origi
 
 
 def change_position(graph, vehicles, total_distance, computation_time, routes, max_vehicle_capacity):
+    print('ROutes before:', routes)
     for idx, route in enumerate(routes):
+        if idx == 5:
+            print("PENE")
         # Convertir la tupla en una lista para modificarla temporalmente
         route_list = list(route)
         nodes_traveled_copy = deepcopy(route_list[0])

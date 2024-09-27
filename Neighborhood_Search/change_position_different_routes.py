@@ -10,7 +10,6 @@ INSTANCES_DIR = 'instances'
 def check_solution(graph, total_distance, new_route, max_vehicle_capacity, original_route, original_capacity, original_times):
     #print('New route:', new_route)
     new_total_distance = 0
-    new_total_time = 0  # Variable para mantener el tiempo total actualizado
     current_vehicle_capacity = max_vehicle_capacity
     total_time = 0  # Tiempo en el que el vehículo sale del depósito (nodo 0)
     arrival_times = [0] # Lista para llevar el tiempo de llegada a cada nodo
@@ -27,27 +26,21 @@ def check_solution(graph, total_distance, new_route, max_vehicle_capacity, origi
         
         # Calcular la distancia desde el nodo anterior
         previous_node = new_route[i - 1]
-        distance_to_current_node = euclidean_distance(graph[previous_node], graph[node_id])
+        distance = euclidean_distance(graph[previous_node], graph[node_id])
+        arrival_time = total_time + distance
 
-        # Actualizar el tiempo de llegada
-        total_time += distance_to_current_node
-
-        # Verificar si el tiempo de llegada cae dentro de la ventana de tiempo del nodo
-        earliest_time, latest_time = graph[node_id][3], graph[node_id][4]
-        if total_time > latest_time:
-            #print(f'Arrived too late to node {node_id}')
+       # Verificar si el tiempo de llegada cae dentro de la ventana de tiempo del nodo
+        if arrival_time > graph[node_id][4]:
             return False, total_distance, original_capacity, original_times
 
-        # Si el vehículo llega antes del tiempo de inicio de servicio, debe esperar
-        if total_time < earliest_time:
-            total_time = earliest_time
-
-        arrival_time = total_time + distance_to_current_node
+        # Si llega antes del tiempo de inicio de servicio, debe esperar
+        if arrival_time < graph[node_id][3]:
+            total_time += (graph[node_id][3] - arrival_time)
+            arrival_time = graph[node_id][3]
 
         # Actualizar el tiempo total y la distancia
-        service_time = graph[node_id][5]
-        total_time += service_time
-        new_total_distance += distance_to_current_node
+        total_time += distance + graph[node_id][5]
+        new_total_distance += distance
         current_vehicle_capacity -= node_demand
         arrival_times.append(arrival_time)
         i += 1
