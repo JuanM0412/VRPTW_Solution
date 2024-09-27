@@ -4,16 +4,15 @@ from copy import deepcopy
 from output import save_results_to_excel
 
 
-OUTPUT_FILE = 'Busqueda_En_Vecindarios/output/VRPTW_JuanManuelGomez_Vecindario1.xlsx'
+OUTPUT_FILE = 'Neighborhood_Search/output/VRPTW_JuanManuelGomez_Vecindario1.xlsx'
 INSTANCES_DIR = 'instances'
 
 
-def check_solution(graph, total_distance, new_route, max_vehicle_capacity, original_route):
-    #print('New route:', new_route)
+def check_solution(graph, total_distance, new_route, max_vehicle_capacity, original_route, original_times):
     new_total_distance = 0
-    new_total_time = 0  # Variable para mantener el tiempo total actualizado
+    total_time = 0  # Tiempo total actualizado
     current_vehicle_capacity = max_vehicle_capacity
-    current_time = 0  # Tiempo en el que el vehículo sale del depósito (nodo 0)
+    arrival_times = [0]  # Lista para llevar el tiempo de llegada a cada nodo
 
     i = 1
     while i < len(new_route) - 1:
@@ -23,43 +22,41 @@ def check_solution(graph, total_distance, new_route, max_vehicle_capacity, origi
         # Verificar si la capacidad del vehículo es suficiente
         if current_vehicle_capacity - node_demand < 0:
             print('Capacity exceeded')
-            return False, total_distance
+            return False, total_distance, original_times
 
         # Calcular la distancia desde el nodo anterior
         previous_node = new_route[i - 1]
-        distance_to_current_node = euclidean_distance(graph[previous_node], graph[node_id])
-
-        # Actualizar el tiempo de llegada
-        current_time += distance_to_current_node
-
+        distance = euclidean_distance(graph[previous_node], graph[node_id])
+        arrival_time = total_time + distance
+    
         # Verificar si el tiempo de llegada cae dentro de la ventana de tiempo del nodo
-        earliest_time, latest_time = graph[node_id][3], graph[node_id][4]
-        if current_time > latest_time:
-            #print(f'Arrived too late to node {node_id}')
-            return False, total_distance
+        if arrival_time > graph[node_id][4]:
+            return False, total_distance, original_times
 
-        # Si el vehículo llega antes del tiempo de inicio de servicio, debe esperar
-        if current_time < earliest_time:
-            current_time = earliest_time
+        # Si llega antes del tiempo de inicio de servicio, debe esperar
+        if arrival_time < graph[node_id][3]:
+            total_time += (graph[node_id][3] - arrival_time)
+            arrival_time = graph[node_id][3]
 
-        # Actualizar el tiempo total y la distancia
-        service_time = graph[node_id][5]
-        current_time += service_time
-        new_total_distance += distance_to_current_node
+        # Actualizar el tiempo de servicio y el tiempo total acumulado
+        total_time += distance + graph[node_id][5]
+        new_total_distance += distance
         current_vehicle_capacity -= node_demand
+        arrival_times.append(arrival_time)  # Registrar el tiempo de llegada actualizado
+
         i += 1
 
     # Verificar si el vehículo puede regresar al depósito a tiempo
     depot_distance = euclidean_distance(graph[new_route[-2]], graph[0])
-    current_time += depot_distance
+    total_time += depot_distance
     new_total_distance += depot_distance
 
-    if current_time > graph[0][4]:  # Tiempo límite para regresar al depósito
-        #print('Exceeded time limit for returning to depot')
-        return False, total_distance
+    if total_time > graph[0][4]:  # Tiempo límite para regresar al depósito
+        return False, total_distance, original_times
 
-    #print('Returning True')
-    return True, new_total_distance
+    arrival_times.append(total_time)  # Tiempo de llegada al depósito
+    print('NEW ROUTE:', new_route)
+    return True, new_total_distance, arrival_times
 
 
 def change_position(graph, vehicles, total_distance, computation_time, routes, max_vehicle_capacity):
@@ -68,7 +65,7 @@ def change_position(graph, vehicles, total_distance, computation_time, routes, m
         route_list = list(route)
         nodes_traveled_copy = deepcopy(route_list[0])
         current_route_distance = route_list[4]
-        travel_times = route_list[3]
+        travel_times = deepcopy(route_list[3])
         flag = True
 
         i = 1
@@ -79,14 +76,18 @@ def change_position(graph, vehicles, total_distance, computation_time, routes, m
                 nodes_traveled_copy[i], nodes_traveled_copy[j] = nodes_traveled_copy[j], nodes_traveled_copy[i]
                 
                 # Verificar factibilidad y distancia
-                factibility, new_total_distance = check_solution(deepcopy(graph), deepcopy(total_distance), nodes_traveled_copy, deepcopy(max_vehicle_capacity), route)
+                print('ROUTEA', nodes_traveled_copy)
+                factibility, new_total_distance, possible_travel_times = check_solution(deepcopy(graph), deepcopy(total_distance), nodes_traveled_copy, deepcopy(max_vehicle_capacity), route, travel_times)
                 
                 if factibility and new_total_distance < current_route_distance:
+                    print('ROUTEB', nodes_traveled_copy)
                     flag = False
                     print('Old distance', current_route_distance)
-                    current_route_distance = new_total_distance
-                    route_list[4] = current_route_distance  # Modificar la distancia
-                    route_list[0] = nodes_traveled_copy  # Actualizar la ruta
+                    route_list[3] = deepcopy(possible_travel_times)
+                    current_route_distance = deepcopy(new_total_distance)
+                    route_list[4] = deepcopy(current_route_distance)  # Modificar la distancia
+                    route_list[0] = deepcopy(nodes_traveled_copy)  # Actualizar la ruta
+                    print('ROUTEC', route_list[0])
                     print('NEW DISTANCE', current_route_distance)
                     i = 1  # Reiniciar el ciclo para buscar más mejoras
                     break
@@ -95,10 +96,12 @@ def change_position(graph, vehicles, total_distance, computation_time, routes, m
 
                 if flag:
                     nodes_traveled_copy = deepcopy(route_list[0])
+                    travel_times = deepcopy(route_list[3])
             i += 1
 
         # Convertir la lista nuevamente a una tupla después de las modificaciones
         routes[idx] = tuple(route_list)
+        print(f'route number {idx}:', routes[idx])
 
         total_distance = sum(route[4] for route in routes)
 
