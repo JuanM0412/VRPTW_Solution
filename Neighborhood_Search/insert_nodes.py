@@ -1,10 +1,10 @@
 from solution import solve_instance, euclidean_distance
-import os, time
+import os
 from copy import deepcopy
 from output import save_results_to_excel
 
-OUTPUT_FILE = 'Neighborhood_Search/output/VRPTW_JuanManuelGomez_Vecindario3.xlsx'
-INSTANCES_DIR = 'instances'
+OUTPUT_FILE = 'Neighborhood_Search/output/VRPTW_JuanManuelGomez_Vecindario4.xlsx'
+INSTANCES_DIR = 'test'
 
 
 def check_solution(graph, total_distance, new_route, max_vehicle_capacity, original_route, original_capacity, original_times):
@@ -61,65 +61,82 @@ def check_solution(graph, total_distance, new_route, max_vehicle_capacity, origi
 
 
 def change_position(graph, vehicles, total_distance, computation_time, routes, max_vehicle_capacity):
-    start_time = time.time()
     for idx1, route1 in enumerate(routes):
         route_list1 = list(route1)
         capacity_route1 = route_list1[2]
-        nodes_traveled_copy1 = deepcopy(route_list1[0])
+        nodes_traveled_copy1 = deepcopy(route_list1[0])  # Copia de la ruta original
         travel_times1 = deepcopy(route_list1[3])
         current_route_distance1 = route_list1[4]
         
         for idx2 in range(idx1 + 1, len(routes)):
             route_list2 = list(routes[idx2])
-            nodes_traveled_copy2 = deepcopy(route_list2[0])
+            nodes_traveled_copy2 = deepcopy(route_list2[0])  # Copia de la otra ruta
             current_route_distance2 = route_list2[4]
             travel_times2 = deepcopy(route_list2[3])
             capacity_route2 = route_list2[2]
             flag = True
 
-            for i in range(1, len(nodes_traveled_copy1) - 1):
-                for j in range(1, len(nodes_traveled_copy2) - 1):
-                    # Intercambiar nodos entre rutas
-                    nodes_traveled_copy1[i], nodes_traveled_copy2[j] = nodes_traveled_copy2[j], nodes_traveled_copy1[i]
+            i = 1
+            while i < len(nodes_traveled_copy1) - 1:
+                node_to_move = nodes_traveled_copy1[i]  # Nodo que queremos mover
+                nodes_traveled_copy1_without_node = nodes_traveled_copy1[:i] + nodes_traveled_copy1[i+1:]  # Copia sin el nodo
 
-                    # Verificar factibilidad y distancia para ambas rutas
-                    factibility1, new_total_distance1, new_vehicle_capacity1, possible_times1 = check_solution(deepcopy(graph), deepcopy(total_distance), nodes_traveled_copy1, deepcopy(max_vehicle_capacity), route1, capacity_route1, travel_times1)
-                    factibility2, new_total_distance2, new_vehicle_capacity2, possible_times2 = check_solution(deepcopy(graph), deepcopy(total_distance), nodes_traveled_copy2, deepcopy(max_vehicle_capacity), route_list2, capacity_route2, travel_times2)
+                j = 1
+                while j < len(nodes_traveled_copy2):  # Probar todas las posiciones en la ruta 2
+                    # Insertar el nodo en la posición j de la ruta 2
+                    new_route2 = nodes_traveled_copy2[:j] + [node_to_move] + nodes_traveled_copy2[j:]
+
+                    # Verificar factibilidad para ambas rutas
+                    factibility1, new_total_distance1, new_vehicle_capacity1, possible_times1 = check_solution(
+                        deepcopy(graph), deepcopy(total_distance), nodes_traveled_copy1_without_node, 
+                        deepcopy(max_vehicle_capacity), route1, capacity_route1, travel_times1
+                    )
+                    factibility2, new_total_distance2, new_vehicle_capacity2, possible_times2 = check_solution(
+                        deepcopy(graph), deepcopy(total_distance), new_route2, 
+                        deepcopy(max_vehicle_capacity), route_list2, capacity_route2, travel_times2
+                    )
 
                     if factibility1 and factibility2:
                         new_total_distance = new_total_distance1 + new_total_distance2
                         if new_total_distance < (current_route_distance1 + current_route_distance2):
                             flag = False
-                            #print(f'Intercambio entre rutas {idx1} y {idx2}')
-                            #print(f'DISTANCIAS ANTERIORES: Ruta {idx1}: {current_route_distance1}, Ruta {idx2}: {current_route_distance2}')
+                            print(f'Inserción entre rutas {idx1} y {idx2}')
+                            print(f'DISTANCIAS ANTERIORES: Ruta {idx1}: {current_route_distance1}, Ruta {idx2}: {current_route_distance2}')
+                            
+                            # Actualiza la distancia y ruta 1
                             current_route_distance1 = deepcopy(new_total_distance1)
+                            route_list1[4] = current_route_distance1  # Actualizar la distancia
+                            route_list1[0] = nodes_traveled_copy1_without_node  # Actualizar la ruta (sin el nodo)
+
+                            # Actualiza la distancia y ruta 2
                             current_route_distance2 = deepcopy(new_total_distance2)
-                            route_list1[4] = deepcopy(current_route_distance1)  # Modificar la distancia en la ruta 1
-                            route_list2[4] = deepcopy(current_route_distance2)  # Modificar la distancia en la ruta 2
-                            route_list1[0] = deepcopy(nodes_traveled_copy1)  # Actualizar la ruta 1
-                            route_list2[0] = deepcopy(nodes_traveled_copy2)  # Actualizar la ruta 2
-                            route_list1[2] = deepcopy(new_vehicle_capacity1) # Actualizar la capacidad ruta 1
-                            route_list2[2] = deepcopy(new_vehicle_capacity2) # Actualizar la capacidad ruta 2
-                            route_list1[3] = deepcopy(possible_times1)
-                            route_list2[3] = deepcopy(possible_times2)
-                            #print(f'NUEVAS DISTANCIAS: Ruta {idx1}: {current_route_distance1}, Ruta {idx2}: {current_route_distance2}')
+                            route_list2[4] = current_route_distance2  # Actualizar la distancia
+                            route_list2[0] = new_route2  # Actualizar la nueva ruta (con el nodo)
+
+                            # Actualizar capacidad y tiempos
+                            route_list1[2] = new_vehicle_capacity1
+                            route_list2[2] = new_vehicle_capacity2
+                            route_list1[3] = possible_times1
+                            route_list2[3] = possible_times2
+
+                            print(f'NUEVAS DISTANCIAS: Ruta {idx1}: {current_route_distance1}, Ruta {idx2}: {current_route_distance2}')
+                            
+                            # Actualizar las rutas originales
+                            routes[idx1] = tuple(route_list1)  # Ruta 1 actualizada
+                            routes[idx2] = tuple(route_list2)  # Ruta 2 actualizada
+
+                            # Reiniciar la iteración para revisar posibles mejoras
+                            i = 1
                             break
 
-                    # Revertir si no es factible
-                    nodes_traveled_copy1[i], nodes_traveled_copy2[j] = nodes_traveled_copy2[j], nodes_traveled_copy1[i]
+                    j += 1
 
+                i += 1
                 if not flag:
                     break
 
-            # Actualizar las rutas después del intercambio
-            routes[idx1] = tuple(route_list1)
-            routes[idx2] = tuple(route_list2)
-
-        # Recalcular la distancia total
+        # Recalcular la distancia total después de todas las modificaciones
         total_distance = sum(route[4] for route in routes)
-
-    end_time = time.time()
-    computation_time += int((end_time - start_time) * 1000)
 
     return len(routes), total_distance, computation_time, routes, max_vehicle_capacity
 

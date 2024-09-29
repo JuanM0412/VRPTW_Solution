@@ -9,9 +9,19 @@ def save_results_to_excel(instance_name, vehicles, total_distance, computation_t
         workbook = openpyxl.load_workbook(output_file)
 
     sheet = workbook.create_sheet(instance_name)
+    none_counter = 0
+
+    for route_info in routes:
+        route = route_info[0]
+        flag = True
+        for node in route:
+            if node != 0:
+                flag = False
+
+        none_counter += 1 if flag else 0
 
     # First row with overall results
-    sheet.append([vehicles, round(total_distance, 3), computation_time])
+    sheet.append([vehicles - none_counter, round(total_distance, 3), computation_time])
 
     # Detailed results for each vehicle
     for route_info in routes:
@@ -20,6 +30,9 @@ def save_results_to_excel(instance_name, vehicles, total_distance, computation_t
         time = route_info[1]
         capacity = route_info[2]
         arrival_times = route_info[3]
+
+        if route[1] == 0:
+            continue
         # Si hay más elementos en la tupla, puedes ignorarlos o utilizarlos según sea necesario
 
         # Prepare the row with number of nodes, the route, and the arrival times

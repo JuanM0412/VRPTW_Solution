@@ -1,10 +1,10 @@
 from solution import solve_instance, euclidean_distance
-import os
+import os, time
 from copy import deepcopy
 from output import save_results_to_excel
 
 
-OUTPUT_FILE = 'Neighborhood_Search/output/VRPTW_JuanManuelGomez_Vecindario1.xlsx'
+OUTPUT_FILE = 'Neighborhood_Search/output/VRPTW_JuanManuelGomez_Vecindario1_1.xlsx'
 INSTANCES_DIR = 'instances'
 
 
@@ -59,6 +59,7 @@ def check_solution(graph, total_distance, new_route, max_vehicle_capacity, origi
 
 
 def change_position(graph, vehicles, total_distance, computation_time, routes, max_vehicle_capacity):
+    start_time = time.time()
     for idx, route in enumerate(routes):
         # Convertir la tupla en una lista para modificarla temporalmente
         route_list = list(route)
@@ -99,6 +100,9 @@ def change_position(graph, vehicles, total_distance, computation_time, routes, m
         routes[idx] = tuple(route_list)
 
         total_distance = sum(route[4] for route in routes)
+
+    end_time = time.time()
+    computation_time += int((end_time - start_time) * 1000)
 
     return len(routes), total_distance, computation_time, routes, max_vehicle_capacity
 
