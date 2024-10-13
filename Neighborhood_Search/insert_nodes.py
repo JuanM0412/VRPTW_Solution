@@ -21,7 +21,7 @@ def check_solution(graph, total_distance, new_route, max_vehicle_capacity, origi
 
         # Verificar si la capacidad del vehículo es suficiente
         if current_vehicle_capacity - node_demand < 0:
-            print('Capacity exceeded')
+            #print('Capacity exceeded')
             return False, total_distance, original_capacity, original_times
         
         # Calcular la distancia desde el nodo anterior
@@ -98,7 +98,7 @@ def insert_node_in_route(graph, route_from, route_to, max_vehicle_capacity, tota
     return improved, best_route_from, best_route_to, best_total_distance
 
 
-def change_position(graph, vehicles, total_distance, computation_time, routes, max_vehicle_capacity):
+def insert_nodes(graph, vehicles, total_distance, computation_time, routes, max_vehicle_capacity):
     start_time = time.time()
     for idx1, route1 in enumerate(routes):
         for idx2 in range(idx1 + 1, len(routes)):

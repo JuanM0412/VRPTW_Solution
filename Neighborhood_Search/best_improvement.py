@@ -21,7 +21,7 @@ def check_solution(graph, total_distance, new_route, max_vehicle_capacity, origi
 
         # Verificar si la capacidad del vehículo es suficiente
         if current_vehicle_capacity - node_demand < 0:
-            print('Capacity exceeded')
+            #print('Capacity exceeded')
             return False, total_distance, original_times
 
         # Calcular la distancia desde el nodo anterior
@@ -58,7 +58,7 @@ def check_solution(graph, total_distance, new_route, max_vehicle_capacity, origi
     return True, new_total_distance, arrival_times
 
 
-def change_position(graph, vehicles, total_distance, computation_time, routes, max_vehicle_capacity):
+def best_improvement(graph, vehicles, total_distance, computation_time, routes, max_vehicle_capacity):
     start_time = time.time()
     for idx, route in enumerate(routes):
         # Convertir la tupla en una lista para modificarla temporalmente
@@ -98,11 +98,11 @@ def change_position(graph, vehicles, total_distance, computation_time, routes, m
 
         # Si encontramos una mejor ruta, la aplicamos
         if found_better_solution:
-            print('Old distance', current_route_distance)
+            #print('Old distance', current_route_distance)
             route_list[0] = best_route
             route_list[3] = best_travel_times
             route_list[4] = best_total_distance
-            print('NEW DISTANCE', best_total_distance)
+            #print('NEW DISTANCE', best_total_distance)
             routes[idx] = tuple(route_list)
 
         total_distance = sum(route[4] for route in routes)

@@ -21,7 +21,7 @@ def check_solution(graph, total_distance, new_route, max_vehicle_capacity, origi
 
         # Verificar si la capacidad del vehículo es suficiente
         if current_vehicle_capacity - node_demand < 0:
-            print('Capacity exceeded')
+            #print('Capacity exceeded')
             return False, total_distance, original_times
 
         # Calcular la distancia desde el nodo anterior
@@ -80,12 +80,12 @@ def change_position(graph, vehicles, total_distance, computation_time, routes, m
                 
                 if factibility and new_total_distance < current_route_distance:
                     flag = False
-                    print('Old distance', current_route_distance)
+                    #print('Old distance', current_route_distance)
                     route_list[3] = deepcopy(possible_travel_times)
                     current_route_distance = deepcopy(new_total_distance)
                     route_list[4] = deepcopy(current_route_distance)  # Modificar la distancia
                     route_list[0] = deepcopy(nodes_traveled_copy)  # Actualizar la ruta
-                    print('NEW DISTANCE', current_route_distance)
+                    #print('NEW DISTANCE', current_route_distance)
                     i = 1  # Reiniciar el ciclo para buscar más mejoras
                     break
 
