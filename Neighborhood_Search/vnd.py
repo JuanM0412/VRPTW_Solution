@@ -1,4 +1,4 @@
-from solution import solve_instance
+from solution import constructive
 import os, time
 from copy import deepcopy
 from output import save_results_to_excel
@@ -51,8 +51,8 @@ def main():
             instance_name = instance_filename.replace('.txt', '')
             instance_number = int(instance_name[5::])
             print('Instance number:', instance_number)
-            graph, vehicles, total_distance, computation_time, routes, vehicle_capacity = solve_instance(instance_path)
-            ehicles, total_distance, computation_time, routes, vehicle_capacity = vnd(graph, vehicles, total_distance, computation_time, routes, vehicle_capacity, instance_number)
+            graph, vehicles, total_distance, computation_time, routes, vehicle_capacity = constructive(instance_path)
+            vehicles, total_distance, computation_time, routes, vehicle_capacity = vnd(graph, vehicles, total_distance, computation_time, routes, vehicle_capacity, instance_number)
             save_results_to_excel(instance_name, vehicles, total_distance, computation_time, routes, vehicle_capacity, OUTPUT_FILE)
 
 

@@ -1,4 +1,4 @@
-from solution import solve_instance, euclidean_distance
+from solution import constructive, euclidean_distance
 import os, time
 from copy import deepcopy
 from output import save_results_to_excel
@@ -118,9 +118,9 @@ def main():
             instance_path = os.path.join(INSTANCES_DIR, instance_filename)
             print(f'Solving instance {instance_path}')
             instance_name = instance_filename.replace('.txt', '')
-            graph, vehicles, total_distance, computation_time, routes, vehicle_capacity = solve_instance(instance_path)
+            graph, vehicles, total_distance, computation_time, routes, vehicle_capacity = constructive(instance_path)
             #print('ROUTES:', routes)
-            vehicles, total_distance, computation_time, routes, vehicle_capacity = change_position(graph, vehicles, total_distance, computation_time, routes, vehicle_capacity)
+            vehicles, total_distance, computation_time, routes, vehicle_capacity = two_opt(graph, vehicles, total_distance, computation_time, routes, vehicle_capacity)
             save_results_to_excel(instance_name, vehicles, total_distance, computation_time, routes, vehicle_capacity, OUTPUT_FILE)
 
 
