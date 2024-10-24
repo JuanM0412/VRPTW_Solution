@@ -1,23 +1,6 @@
 import math, os, time, openpyxl, random
 
 
-def parse_file(filename):
-    with open(filename, 'r') as file:
-        content = file.readlines()
-
-    first_line = content[0].split()
-    n_nodes = int(first_line[0])
-    vehicle_capacity = int(first_line[1])
-
-    graph = {}
-    for line in content[1:]:
-        parts = list(map(int, line.split()))
-        node_id = parts[0]
-        graph[node_id] = parts[1:]
-
-    return graph, vehicle_capacity
-
-
 def euclidean_distance(node1, node2):
     x1, y1 = node1[0], node1[1]
     x2, y2 = node2[0], node2[1]
@@ -42,8 +25,7 @@ def calculate_distances(graph, current_node_id, remaining_nodes, alpha):
     return distances[:resulting_nodes]
 
 
-def solve_instance(instance_filename, alpha):
-    graph, vehicle_capacity = parse_file(instance_filename)
+def solve_instance(graph, vehicle_capacity, alpha):
     remaining_nodes = set(graph.keys())
     vehicles = 1
     route = [0]
@@ -132,4 +114,4 @@ def solve_instance(instance_filename, alpha):
     end_time = time.time()
     computation_time = int((end_time - start_time) * 1000)
 
-    return graph, vehicles, total_distance, computation_time, routes, vehicle_capacity
+    return vehicles, total_distance, computation_time, routes

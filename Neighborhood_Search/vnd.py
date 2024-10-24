@@ -9,18 +9,18 @@ from insert_nodes import insert_nodes
 from best_improvement import best_improvement
 
 
-OUTPUT_FILE = 'Neighborhood_Search/output/VRPTW_JuanManuelGomez_VND4.xlsx'
+OUTPUT_FILE = 'Neighborhood_Search/output/VRPTW_JuanManuelGomez_VND_3120.xlsx'
 INSTANCES_DIR = 'instances'
 TIME_LIMIT = [50000, 50000, 50000, 50000, 50000, 50000, 200000, 200000, 200000, 200000, 200000, 200000, 750000, 750000, 750000, 750000, 750000, 750000]
 
 
 def vnd(graph, vehicles, total_distance, computation_time, routes, max_vehicle_capacity, instance_number):
     start_time = time.time()
-    neighborhoods = {3: best_improvement, 2: change_position, 0: two_opt, 1: different_routes, 4: insert_nodes}
+    neighborhoods = {3: best_improvement, 1: two_opt, 2: different_routes, 0: insert_nodes}
     
     best_total_distance = total_distance
     i = 0
-    while i < 5:
+    while i < 4:
         new_vehicles, new_routes, new_total_distance = deepcopy(vehicles), deepcopy(routes), deepcopy(total_distance)
         result = neighborhoods[i](graph, new_vehicles, new_total_distance, max_vehicle_capacity, new_routes, max_vehicle_capacity)
         _, new_total_distance, computation_time, new_routes, max_vehicle_capacity = result
