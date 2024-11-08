@@ -6,6 +6,7 @@ from change_position_different_routes import different_routes, check_solution
 from solution import parse_file
 from multiple_solutions import solve_instance
 from insert_nodes import insert_nodes
+from vnd import vnd
 from perturbation import perturb_solution
 
 # Parámetros para el algoritmo
@@ -13,7 +14,7 @@ nsol = 3  # Número de soluciones iniciales a generar
 nit = 10  # Número de iteraciones internas (perturbaciones)
 nc = 5    # Número de veces que se perturba la solución por iteración
 
-OUTPUT_FILE = 'Neighborhood_Search/output/VRPTW_JuanManuelGomez_ELS_MultiStart_nsol3_nit10_nc10.xlsx'
+OUTPUT_FILE = 'Neighborhood_Search/output/VRPTW_JuanManuelGomez_ELS_MultiStart_nsol3_nit10_nc5_routes_vnd.xlsx'
 INSTANCES_DIR = 'instances'
 TIME_LIMIT = [50000, 50000, 50000, 50000, 50000, 50000, 200000, 200000, 200000, 200000, 200000, 200000, 750000, 750000, 750000, 750000, 750000, 750000]
 
@@ -40,10 +41,10 @@ def MS_ELS(graph, vehicle_capacity, instance_number, nsol=3, nit=10, nc=5, tabu_
     # Generar múltiples soluciones iniciales
     for h in range(nsol):
         # Generar solución inicial
-        s = initial_solution(graph, vehicle_capacity, h)
+        s = initial_solution(graph, vehicle_capacity, h, instance_number)
 
         # Aplicar búsqueda local a la solución inicial
-        s = local_search(graph, vehicle_capacity, s)
+        s = local_search(graph, vehicle_capacity, s, instance_number)
 
         # Verificar si es la mejor solución hasta el momento
         if s[1] < best_solution[1]:
@@ -56,11 +57,9 @@ def MS_ELS(graph, vehicle_capacity, instance_number, nsol=3, nit=10, nc=5, tabu_
         for c in range(nc):
             # Perturbar la solución actual
             perturbed_solution = perturb_solution(graph, best_solution, vehicle_capacity)
-            #print('Perturbed solution:', perturbed_solution)
 
             # Aplicar búsqueda local
-            improved_solution = local_search(graph, vehicle_capacity, perturbed_solution)
-            #print('Improved solution:', improved_solution)
+            improved_solution = local_search(graph, vehicle_capacity, perturbed_solution, instance_number)
 
             # Comparar con la mejor solución de la iteración
             if not tabu_list.is_tabu(improved_solution[3]):
@@ -81,21 +80,21 @@ def MS_ELS(graph, vehicle_capacity, instance_number, nsol=3, nit=10, nc=5, tabu_
     return best_solution, int((time.time() - start_time) * 1000)
 
 
-def initial_solution(graph, vehicle_capacity, h):
+def initial_solution(graph, vehicle_capacity, h, instance_number):
     if h == 0:
         solution = solve_instance(graph, vehicle_capacity, 0)
     elif h == 1:
         solution = solve_instance(graph, vehicle_capacity, 0)
-        local_search(graph, vehicle_capacity, solution)
+        local_search(graph, vehicle_capacity, solution, instance_number)
     else:
         solution = solve_instance(graph, vehicle_capacity, random.uniform(0.1, 0.3))
 
     return solution
 
 
-def local_search(graph, vehicle_capacity, solution):
+def local_search(graph, vehicle_capacity, solution, instance_number):
     # Función que aplica búsqueda local a la solución
-    improved_solution = insert_nodes(graph, solution[0], solution[1], solution[2], solution[3], vehicle_capacity)  # Método para mejorar la solución
+    improved_solution = vnd(graph, solution[0], solution[1], solution[2], solution[3], vehicle_capacity, instance_number)  # Método para mejorar la solución
     return improved_solution
 
 
