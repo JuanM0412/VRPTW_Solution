@@ -6,14 +6,15 @@ from solution import euclidean_distance
 import output
 import time
 from insert_nodes import insert_nodes
+from vnd import vnd
 
 # Parámetros del Algoritmo Genético
 POPULATION_SIZE = 50
-NUM_GENERATIONS = 100
+NUM_GENERATIONS = 25
 CROSSOVER_RATE = 0.75
-MUTATION_RATE = 0.1
-INSTANCES_DIR = "test"
-OUTPUT_FILE = "Evolutionary_Methods/output/VRPTW_JuanManuelGomez_GA_50_100_075_01.xlsx"
+MUTATION_RATE = 1
+INSTANCES_DIR = "instances"
+OUTPUT_FILE = "Evolutionary_Methods/output/VRPTW_JuanManuelGomez_GA_50_25_075_1.xlsx"
 
 
 def check_solution(graph, total_distance, new_route, max_vehicle_capacity, original_route, original_times):
@@ -76,7 +77,7 @@ def initialize_population(graph, vehicle_capacity):
         alpha = random.uniform(0.1, 0.3)
         solution = ms.solve_instance(graph, vehicle_capacity, alpha)
         vehicles, total_distance, computation_time, routes = solution
-        population.append((vehicles, total_distance, computation_time, routes))
+        population.append((vehicles, total_distance, computation_time, routes, vehicle_capacity))
 
     return population
 
@@ -90,8 +91,10 @@ def selection(population):
 
 def route_based_crossover(parent1, parent2, graph, vehicle_capacity, instance_number):
     solution1, solution2 = parent1, parent2
-    _, _, _, routes1 = solution1
-    _, _, _, routes2 = solution2
+    #print(f"parent1 = {parent1}")
+    #print(f"parent2 = {parent2}")
+    _, _, _, routes1, _ = solution1
+    _, _, _, routes2, _ = solution2
 
     # Selección de algunas rutas de los padres
     selected_routes = random.sample(routes1, k=min(len(routes1), 2))
@@ -120,6 +123,7 @@ def route_based_crossover(parent1, parent2, graph, vehicle_capacity, instance_nu
             graph, 0, new_route, vehicle_capacity, [], []
         )
         if is_valid:
+            #print("arrival_times: ", arrival_times)
             child_routes.append((new_route, new_total_distance, remaining_capacity, arrival_times, route_distance))
 
     # Recalcular la distancia total y el número de vehículos para la solución generada
@@ -127,21 +131,22 @@ def route_based_crossover(parent1, parent2, graph, vehicle_capacity, instance_nu
     vehicles = len(child_routes)
     computation_time = 0
 
-    child_routes = (vehicles, total_distance, computation_time, child_routes)
+    child_routes = (vehicles, total_distance, computation_time, child_routes, vehicle_capacity)
 
     # Aplicar insert_nodes en el hijo generado
-    #improved_child_solution = insert_nodes(graph, vehicles, total_distance, computation_time, child_routes, vehicle_capacity)
+    improved_child_solution = insert_nodes(graph, vehicles, total_distance, computation_time, child_routes[3], vehicle_capacity)
     #print(f"child_routes = {child_routes}")
-    #print(f"improved_child_solution = {improved_child_solution[1]}")
+    #print(f"improved_child_solution = {improved_child_solution}")
     #print("Parents: ", parent1)
-    #print("Minimum of parents: ", min(fitness(parent1[0]), fitness(parent2[0])))
+    #print("Child: ", fitness(child_routes))
+    #print("Minimum of parents: ", min(fitness(parent1), fitness(parent2)))
     # Devolver el mejor hijo
-    return child_routes if fitness(child_routes) < min(fitness(parent1), fitness(parent2)) else min(parent1, parent2, key=lambda p: fitness(p))
+    return improved_child_solution if fitness(improved_child_solution) < min(fitness(parent1), fitness(parent2)) else min(parent1, parent2, key=lambda p: fitness(p))
 
 
 def mutate(solution, graph, vehicle_capacity, instance_number):
     #print("Solution: ", solution)
-    (vehicles, total_distance, computation_time, routes) = solution
+    (vehicles, total_distance, computation_time, routes, vehicle_capacity) = solution
 
     # Elegir aleatoriamente una ruta y un nodo de esa ruta para reubicar
     route_idx = random.randint(0, len(routes) - 1)
@@ -186,7 +191,7 @@ def mutate(solution, graph, vehicle_capacity, instance_number):
         
         # Recalcular la distancia total y retornar la solución mutada
         new_total_distance = sum(route[1] for route in new_routes if len(route) > 1)
-        mutated_solution = (vehicles, new_total_distance, computation_time, new_routes)
+        mutated_solution = (vehicles, new_total_distance, computation_time, new_routes, vehicle_capacity)
         return mutated_solution
 
     # Si no es factible, retornar la solución original
@@ -211,6 +216,7 @@ def genetic_algorithm(graph, vehicle_capacity, instance_number):
                 child = parent1
 
             if random.random() < MUTATION_RATE:
+                #print(child)
                 child = mutate(child, graph, vehicle_capacity, instance_number)
 
             new_population.append(child)
@@ -220,7 +226,7 @@ def genetic_algorithm(graph, vehicle_capacity, instance_number):
         if fitness(current_best) < fitness(best_solution):
             best_solution = current_best
 
-        print(f"Generación {generation + 1}: Mejor distancia = {fitness(best_solution)}")
+        #print(f"Generación {generation + 1}: Mejor distancia = {fitness(best_solution)}")
 
     return best_solution
 
@@ -246,7 +252,8 @@ def main():
             instance_name = instance_filename.replace('.txt', '')
             instance_number = int(instance_name[5::])
             best_solution = genetic_algorithm(graph, vehicle_capacity, instance_number)
-            vehicles, total_distance, computation_time, routes = best_solution
+            vehicles, total_distance, computation_time, routes, vehicle_capacity = best_solution
+            print("Best solution: ", fitness(best_solution))
             output.save_results_to_excel(instance_filename, vehicles, total_distance, computation_time, routes, vehicle_capacity, OUTPUT_FILE)
             print(f'Instance {instance_filename} solved.\n')
 

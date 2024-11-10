@@ -30,6 +30,8 @@ def save_results_to_excel(instance_name, vehicles, total_distance, computation_t
         time = route_info[1]
         capacity = route_info[2]
         arrival_times = route_info[3]
+        #print("arrival_times: ", arrival_times)
+        #print("route_info: ", route_info)
 
         if route[1] == 0:
             continue
@@ -37,7 +39,6 @@ def save_results_to_excel(instance_name, vehicles, total_distance, computation_t
 
         # Prepare the row with number of nodes, the route, and the arrival times
         route_without_depots = route[1:-1]  # Exclude the depots (first and last)
-        arrival_times_without_depots = arrival_times[1:-1]  # Exclude depot times for arrival
 
         # Construct the row data
         row = [len(route_without_depots)] + route + [round(t, 3) for t in arrival_times] + [vehicle_capacity - capacity]
