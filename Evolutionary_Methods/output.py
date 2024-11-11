@@ -28,8 +28,12 @@ def save_results_to_excel(instance_name, vehicles, total_distance, computation_t
         # Descomponer la tupla en los primeros cuatro elementos, e ignorar los adicionales
         route = route_info[0]
         time = route_info[1]
-        capacity = route_info[2]
-        arrival_times = route_info[3]
+        if type(route_info[3]) == int:
+            capacity = route_info[3]
+            arrival_times = route_info[2]
+        else:   
+            capacity = route_info[2]
+            arrival_times = route_info[3]
         #print("arrival_times: ", arrival_times)
         #print("route_info: ", route_info)
 
