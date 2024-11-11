@@ -5,16 +5,15 @@ import multiple_solutions as ms
 from solution import euclidean_distance
 import output
 import time
-from change_position_same_route import change_position
 from change_position_different_routes import different_routes
 
 # Parámetros del Algoritmo Genético
-POPULATION_SIZE = 500
-NUM_GENERATIONS = 100
-NUM_CHILDREN = 75
-MUTATION_RATE = 0.4
+POPULATION_SIZE = 10
+NUM_GENERATIONS = 10
+NUM_CHILDREN = 10
+MUTATION_RATE = 0.1
 INSTANCES_DIR = "../instances"
-OUTPUT_FILE = "/home/juan/University/Heurística/VRPTW/Evolutionary_Methods/output/VRPTW_JuanManuelGomez_GA_500_100_75_04.xlsx"
+OUTPUT_FILE = "/home/juan/University/Heurística/VRPTW/Evolutionary_Methods/output/VRPTW_JuanManuelGomez_GA_10_10_10_01.xlsx"
 
 
 CROSSOVER_RATE = 0.75
@@ -156,7 +155,6 @@ def route_based_crossover(parent1, parent2, graph, vehicle_capacity, instance_nu
 def mutate(solution, graph, vehicle_capacity, instance_number):
     #print("Solution: ", solution)
     vehicles, total_distance, computation_time, routes, vehicle_capacity = different_routes(graph, solution[0], solution[1], solution[2], solution[3], vehicle_capacity)
-    
     new_solution = (vehicles, total_distance, computation_time, routes, vehicle_capacity)
     
     return new_solution
@@ -165,6 +163,7 @@ def mutate(solution, graph, vehicle_capacity, instance_number):
 def genetic_algorithm(graph, vehicle_capacity, instance_number):
     population = initialize_population(graph, vehicle_capacity)
     best_solution = min(population, key=lambda sol: fitness(sol))
+    initial_solution = deepcopy(best_solution)
 
     print(f"Distancia inicial = {fitness(best_solution)}")
 
@@ -213,6 +212,13 @@ def genetic_algorithm(graph, vehicle_capacity, instance_number):
         #print(f"Generación {generation + 1}: Mejor distancia = {fitness(best_solution)}")
         end_time = time.time()
         computation_time += int((end_time - start_time) * 1000)
+
+    vehicles, total_distance, computation_time, routes, vehicle_capacity = best_solution
+    print("total_distance: ", total_distance)
+
+    if total_distance == fitness(initial_solution):
+        print("Retornando initial solution")
+        return initial_solution, computation_time
 
     return best_solution, computation_time
 
